@@ -12,12 +12,11 @@ except Exception:
     st.error("❌ 密钥读取失败！请检查 Secrets 配置。")
     st.stop()
 
-# DeepSeek 配置 (保持不变)
 DEEPSEEK_BASE_URL = "https://api.siliconflow.cn/v1"
 DEEPSEEK_MODEL = "deepseek-ai/DeepSeek-V3"
 
-# 【这是新增的替换行】千问百炼接口地址
-QWEN_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+# 必须增加这一行，指向百炼的兼容接口
+QWEN_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1" 
 
 
 # --- 2. 提示词库 ---
@@ -141,7 +140,7 @@ def call_qwen_vl(image_file):
         base64_image = base64.b64encode(image_file.getvalue()).decode('utf-8')
         file_type = image_file.type.split('/')[-1]
         
-        # 改用 OpenAI 客户端格式，直接喂入 QWEN_API_KEY，不给它报错的机会
+        # 使用新的 OpenAI 客户端方式
         client = OpenAI(api_key=QWEN_API_KEY, base_url=QWEN_BASE_URL)
         
         response = client.chat.completions.create(
@@ -149,7 +148,7 @@ def call_qwen_vl(image_file):
             messages=[{
                 "role": "user",
                 "content": [
-                    [span_5](start_span){"type": "text", "text": PROMPT_QWEN}, # 这里完美保留了你原本的 PROMPT_QWEN[span_5](end_span)
+                    {"type": "text", "text": PROMPT_QWEN}, # <--- 注意这里的逗号
                     {"type": "image_url", "image_url": {"url": f"data:image/{file_type};base64,{base64_image}"}}
                 ]
             }]
@@ -158,6 +157,7 @@ def call_qwen_vl(image_file):
     except Exception as e:
         st.error(f"视觉识别失败: {e}")
         return None
+
 
 
 def call_deepseek(physical_detail, system_prompt, weather, mood):
