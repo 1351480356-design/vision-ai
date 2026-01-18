@@ -6,10 +6,10 @@ from http import HTTPStatus
 
 # --- 1. 配置区域 (部署时将从 Secrets 读取) ---
 # 注意：在本地测试时你可以填 Key，但上传 GitHub 前请务必删掉或按下方格式修改
-DEEPSEEK_API_KEY = st.secrets.get("DEEPSEEK_KEY", "你的临时本地Key")
+DEEPSEEK_API_KEY = st.secrets.get("DEEPSEEK_KEY")
 DEEPSEEK_BASE_URL = "https://api.siliconflow.cn/v1"
 DEEPSEEK_MODEL = "deepseek-ai/DeepSeek-V3"
-QWEN_API_KEY = st.secrets.get("QWEN_KEY", "你的临时本地Key")
+QWEN_API_KEY = st.secrets.get("QWEN_KEY")
 
 # --- 2. 提示词库 ---
 PROMPT_QWEN = """# Role
