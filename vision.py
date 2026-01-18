@@ -4,12 +4,22 @@ from openai import OpenAI
 from dashscope import MultiModalConversation
 from http import HTTPStatus
 
-# --- 1. 配置区域 (部署时将从 Secrets 读取) ---
-# 注意：在本地测试时你可以填 Key，但上传 GitHub 前请务必删掉或按下方格式修改
-DEEPSEEK_API_KEY = st.secrets.get("DEEPSEEK_KEY")
+# --- 1. 配置区域 ---
+try:
+    # 从 Streamlit Secrets 读取 Key
+    QWEN_API_KEY = st.secrets["QWEN_KEY"]
+    DEEPSEEK_API_KEY = st.secrets["DEEPSEEK_KEY"]
+except KeyError:
+    st.error("❌ 密钥读取失败！请检查 Streamlit 后台 Secrets 是否配置了 QWEN_KEY 和 DEEPSEEK_KEY")
+    st.stop()
+
+# DeepSeek 必须有这两行，因为它是通过 OpenAI 兼容接口调用的
 DEEPSEEK_BASE_URL = "https://api.siliconflow.cn/v1"
 DEEPSEEK_MODEL = "deepseek-ai/DeepSeek-V3"
-QWEN_API_KEY = st.secrets.get("QWEN_KEY")
+
+# 注意：千问不需要单独写两行 URL 和 Model，
+# 因为 URL 内置在 dashscope 里，Model 直接写在 call 函数里了。
+
 
 # --- 2. 提示词库 ---
 PROMPT_QWEN = """# Role
