@@ -1,8 +1,8 @@
 import streamlit as st
 import base64
-from openai import OpenAI
-from dashscope import MultiModalConversation
-from http import HTTPStatus
+[span_4](start_span)from openai import OpenAI  # 确保这行在，这是我们现在用的“新管子”[span_4](end_span)
+# 不需要导入 dashscope 了
+
 
 # --- 1. 配置区域 ---
 try:
