@@ -6,19 +6,18 @@ from http import HTTPStatus
 
 # --- 1. 配置区域 ---
 try:
-    # 从 Streamlit Secrets 读取 Key
-    QWEN_API_KEY = st.secrets["QWEN_KEY"]
-    DEEPSEEK_API_KEY = st.secrets["DEEPSEEK_KEY"]
-except KeyError:
-    st.error("❌ 密钥读取失败！请检查 Streamlit 后台 Secrets 是否配置了 QWEN_KEY 和 DEEPSEEK_KEY")
+    QWEN_API_KEY = st.secrets["QWEN_KEY"].strip()
+    DEEPSEEK_API_KEY = st.secrets["DEEPSEEK_KEY"].strip()
+except Exception:
+    st.error("❌ 密钥读取失败！请检查 Secrets 配置。")
     st.stop()
 
-# DeepSeek 必须有这两行，因为它是通过 OpenAI 兼容接口调用的
+# DeepSeek 配置 (保持不变)
 DEEPSEEK_BASE_URL = "https://api.siliconflow.cn/v1"
 DEEPSEEK_MODEL = "deepseek-ai/DeepSeek-V3"
 
-# 注意：千问不需要单独写两行 URL 和 Model，
-# 因为 URL 内置在 dashscope 里，Model 直接写在 call 函数里了。
+# 【这是新增的替换行】千问百炼接口地址
+QWEN_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
 
 
 # --- 2. 提示词库 ---
@@ -138,13 +137,28 @@ if "history" not in st.session_state:
 
 # --- 4. 核心功能 ---
 def call_qwen_vl(image_file):
-    base64_image = base64.b64encode(image_file.getvalue()).decode('utf-8')
-    file_type = image_file.type.split('/')[-1]
-    messages = [{"role": "user", "content": [{"image": f"data:image/{file_type};base64,{base64_image}"}, {"text": PROMPT_QWEN}]}]
-    response = MultiModalConversation.call(model='qwen-vl-max', messages=messages, api_key=QWEN_API_KEY)
-    if response.status_code == HTTPStatus.OK:
-        return response.output.choices[0].message.content[0]['text']
-    return None
+    try:
+        base64_image = base64.b64encode(image_file.getvalue()).decode('utf-8')
+        file_type = image_file.type.split('/')[-1]
+        
+        # 改用 OpenAI 客户端格式，直接喂入 QWEN_API_KEY，不给它报错的机会
+        client = OpenAI(api_key=QWEN_API_KEY, base_url=QWEN_BASE_URL)
+        
+        response = client.chat.completions.create(
+            model="qwen-vl-max",
+            messages=[{
+                "role": "user",
+                "content": [
+                    [span_5](start_span){"type": "text", "text": PROMPT_QWEN}, # 这里完美保留了你原本的 PROMPT_QWEN[span_5](end_span)
+                    {"type": "image_url", "image_url": {"url": f"data:image/{file_type};base64,{base64_image}"}}
+                ]
+            }]
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        st.error(f"视觉识别失败: {e}")
+        return None
+
 
 def call_deepseek(physical_detail, system_prompt, weather, mood):
     client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url=DEEPSEEK_BASE_URL)
